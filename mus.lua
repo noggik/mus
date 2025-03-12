@@ -259,25 +259,21 @@ end
 
 local stopFunction = nil
 
-local statsSection = MainTab:AddSection({
-    Title = "📊 สถิติผู้เล่น"
+local statsSection = MainTab:AddSection("สถิติผู้เล่น")
+
+local strengthLabel = statsSection:AddParagraph({
+    Title = "Strength",
+    Content = "กำลังโหลด..."
 })
 
--- ส่วนของ Strength และ Durability ยังใช้จาก GUI เดิม
-local strengthParagraph = statsSection:AddParagraph({
-    Title = "กำลังโหลด...",
-    Content = "Strength"
+local durabilityLabel = statsSection:AddParagraph({
+    Title = "Durability",
+    Content = "กำลังโหลด..."
 })
 
-local durabilityParagraph = statsSection:AddParagraph({
-    Title = "กำลังโหลด...",
-    Content = "Durability"
-})
-
--- ส่วนของ Rebirths ใหม่ ดึงจาก Leaderstats
-local rebirthsParagraph = statsSection:AddParagraph({
-    Title = "กำลังโหลด...", 
-    Content = "Rebirths"
+local rebirthsLabel = statsSection:AddParagraph({
+    Title = "Rebirths",
+    Content = "กำลังโหลด..."
 })
 
 local function formatNumber(val)
@@ -285,16 +281,40 @@ local function formatNumber(val)
 end
 
 local function updateStats()
-    while task.wait(1) do
+    while true do
+        task.wait(1) -- อัพเดททุก 1 วินาที
         local player = game:GetService("Players").LocalPlayer
-        
-        -- Strength (จาก GUI)
-        local strengthFrame = player.PlayerGui.gameGui.statsMenu.statsList.strengthFrame
-        strengthParagraph:SetTitle("💪 Strength: "..strengthFrame.amountLabel.Text)
+        local playerGui = player.PlayerGui
 
-        -- Durability (จาก GUI)
-        local durabilityFrame = player.PlayerGui.gameGui.statsMenu.statsList.durabilityFrame
-        durabilityParagraph:SetTitle("🛡️ Durability: "..durabilityFrame.amountLabel.Text)
+        -- Strength และ Durability (จาก GUI)
+        if playerGui:FindFirstChild("gameGui") then
+            local gameGui = playerGui.gameGui
+            local statsMenu = gameGui:FindFirstChild("statsMenu")
+            
+            if statsMenu then
+                local statsList = statsMenu:FindFirstChild("statsList")
+                
+                if statsList then
+                    -- Strength
+                    local strengthFrame = statsList:FindFirstChild("strengthFrame")
+                    if strengthFrame then
+                        local amountLabel = strengthFrame:FindFirstChild("amountLabel")
+                        if amountLabel then
+                            strengthLabel:SetTitle("Strength: " .. amountLabel.Text)
+                        end
+                    end
+                    
+                    -- Durability
+                    local durabilityFrame = statsList:FindFirstChild("durabilityFrame")
+                    if durabilityFrame then
+                        local amountLabel = durabilityFrame:FindFirstChild("amountLabel")
+                        if amountLabel then
+                            durabilityLabel:SetTitle("Durability: " .. amountLabel.Text)
+                        end
+                    end
+                end
+            end
+        end
 
         -- Rebirths (จาก Leaderstats)
         local success, reb = pcall(function()
@@ -302,9 +322,9 @@ local function updateStats()
         end)
         
         if success then
-            rebirthsParagraph:SetTitle("🔄 Rebirths: "..formatNumber(reb))
+            rebirthsLabel:SetTitle("Rebirths: " .. formatNumber(reb))
         else
-            rebirthsParagraph:SetTitle("🔄 Rebirths: N/A")
+            rebirthsLabel:SetTitle("Rebirths: N/A")
         end
     end
 end
