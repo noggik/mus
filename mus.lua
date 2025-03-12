@@ -1,3 +1,148 @@
+-- สร้าง ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "ControlGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- สร้างปุ่ม
+local button = Instance.new("TextButton")
+button.Name = "ControlButton"
+button.Text = "M"
+button.Size = UDim2.new(0, 50, 0, 50)
+button.Position = UDim2.new(0.5, -25, 0.5, -25)
+button.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 24
+button.Parent = gui
+
+-- ตัวแปรสำหรับการลาก
+local isDragging = false
+local lastMousePos = Vector2.new(0, 0)
+local offset = Vector2.new(0, 0)
+
+-- ฟังก์ชันสำหรับตรวจสอบขอบเขตจอ
+local function getBounds()
+    local guiService = game:GetService("GuiService")
+    local playerGui = player.PlayerGui
+    local screenGui = playerGui:FindFirstChild("ControlGui")
+    if screenGui then
+        local screenSize = guiService:GetScreenResolution()
+        local buttonPos = button.Position
+        local buttonSize = button.Size
+        
+        return {
+            minX = 0,
+            maxX = screenSize.X - (buttonSize.X.Offset + (buttonSize.X.Scale * screenSize.X)),
+            minY = 36, -- พื้นที่สำหรับแถบด้านบน
+            maxY = screenSize.Y - buttonSize.Y.Offset - (buttonSize.Y.Scale * screenSize.Y)
+        }
+    end
+    return { minX = 0, maxX = 0, minY = 0, maxY = 0 }
+end
+
+-- ฟังก์ชันสำหรับอัพเดทตำแหน่งปุ่ม
+local function updateButtonPosition(input)
+    if isDragging then
+        local delta = input.Position - lastMousePos
+        local newPos = Vector2.new(
+            button.Position.X.Offset + delta.X,
+            button.Position.Y.Offset + delta.Y
+        )
+        
+        local bounds = getBounds()
+        newPos = Vector2.new(
+            math.clamp(newPos.X, bounds.minX, bounds.maxX),
+            math.clamp(newPos.Y, bounds.minY, bounds.maxY)
+        )
+        
+        button.Position = UDim2.new(
+            0, newPos.X,
+            0, newPos.Y
+        )
+        
+        lastMousePos = input.Position
+    end
+end
+
+-- ฟังก์ชันสำหรับจำลองกดปุ่ม Ctrl
+local function simulateCtrlKeyPress()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+    wait()
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
+end
+
+-- สร้าง LocalScript สำหรับการรักษาการแสดงผล
+local localScript = Instance.new("LocalScript")
+localScript.Name = "PersistentButton"
+localScript.Parent = gui
+
+-- รหัสใน LocalScript
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- ฟังก์ชันสำหรับรีเซ็ตตำแหน่งปุ่ม
+local function resetButtonPosition()
+    button.Position = UDim2.new(0.5, -25, 0.5, -25)
+end
+
+-- ฟังก์ชันสำหรับจัดการการตาย
+local function onCharacterDeath()
+    -- รอจนกว่าจะเกิดใหม่
+    character = player.CharacterAdded:Wait()
+    humanoid = character:WaitForChild("Humanoid")
+    
+    -- รีเซ็ตตำแหน่งปุ่ม
+    resetButtonPosition()
+    
+    -- เชื่อมต่อเหตุการณ์ใหม่
+    humanoid.Died:Connect(onCharacterDeath)
+end
+
+-- เชื่อมต่อเหตุการณ์การตาย
+humanoid.Died:Connect(onCharacterDeath)
+
+-- รีเซ็ตตำแหน่งเริ่มต้น
+resetButtonPosition()
+
+-- การจัดการอินพุต
+local UserInputService = game:GetService("UserInputService")
+local function onInputBegan(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        if mouse.Target == button then
+            isDragging = true
+            lastMousePos = input.Position
+            offset = Vector2.new(
+                input.Position.X - button.Position.X.Offset,
+                input.Position.Y - button.Position.Y.Offset
+            )
+        end
+    end
+end
+
+local function onInputChanged(input)
+    if input.UserInputType == Enum.UserInputType.Mouse or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        updateButtonPosition(input)
+    end
+end
+
+local function onInputEnded(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = false
+    end
+end
+
+-- เชื่อมต่ออีเวนต์
+UserInputService.InputBegan:Connect(onInputBegan)
+UserInputService.InputChanged:Connect(onInputChanged)
+UserInputService.InputEnded:Connect(onInputEnded)
+button.MouseButton1Click:Connect(simulateCtrlKeyPress)
+
+
 -- โหลด Library
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
