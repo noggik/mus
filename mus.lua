@@ -259,108 +259,54 @@ end
 
 local stopFunction = nil
 
-local statsSection = MainTab:AddSection("สถิติผู้เล่น")
-
-local strengthLabel = statsSection:AddParagraph({
-
-Title = "Strength",
-
-Content = "กำลังโหลด..."
-
+local statsSection = MainTab:AddSection({
+    Title = "📊 สถิติผู้เล่น"
 })
 
-local durabilityLabel = statsSection:AddParagraph({
-
-Title = "Durability",
-
-Content = "กำลังโหลด..."
-
+-- ส่วนของ Strength และ Durability ยังใช้จาก GUI เดิม
+local strengthParagraph = statsSection:AddParagraph({
+    Title = "กำลังโหลด...",
+    Content = "Strength"
 })
 
-local rebirthsLabel = statsSection:AddParagraph({
-
-Title = "Rebirths",
-
-Content = "กำลังโหลด..."
-
+local durabilityParagraph = statsSection:AddParagraph({
+    Title = "กำลังโหลด...",
+    Content = "Durability"
 })
+
+-- ส่วนของ Rebirths ใหม่ ดึงจาก Leaderstats
+local rebirthsParagraph = statsSection:AddParagraph({
+    Title = "กำลังโหลด...", 
+    Content = "Rebirths"
+})
+
+local function formatNumber(val)
+    return tostring(val):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+end
 
 local function updateStats()
+    while task.wait(1) do
+        local player = game:GetService("Players").LocalPlayer
+        
+        -- Strength (จาก GUI)
+        local strengthFrame = player.PlayerGui.gameGui.statsMenu.statsList.strengthFrame
+        strengthParagraph:SetTitle("💪 Strength: "..strengthFrame.amountLabel.Text)
 
-while true do
+        -- Durability (จาก GUI)
+        local durabilityFrame = player.PlayerGui.gameGui.statsMenu.statsList.durabilityFrame
+        durabilityParagraph:SetTitle("🛡️ Durability: "..durabilityFrame.amountLabel.Text)
 
-task.wait(1) -- อัพเดททุก 1 วินาที
-
-local playerGui = game:GetService("Players").LocalPlayer.PlayerGui
-
-if playerGui:FindFirstChild("gameGui") then
-
-local gameGui = playerGui.gameGui
-
-local statsMenu = gameGui:FindFirstChild("statsMenu")
-
-if statsMenu then
-
-local statsList = statsMenu:FindFirstChild("statsList")
-
-local bottomStatList = statsMenu:FindFirstChild("bottomStatList")
-
-if statsList then
-
-local strengthFrame = statsList:FindFirstChild("strengthFrame")
-
-local durabilityFrame = statsList:FindFirstChild("durabilityFrame")
-
-if strengthFrame then
-
-local amountLabel = strengthFrame:FindFirstChild("amountLabel")
-
-if amountLabel then
-
-strengthLabel:SetTitle("Strength: " .. amountLabel.Text)
-
-end
-
-end
-
-if durabilityFrame then
-
-local amountLabel = durabilityFrame:FindFirstChild("amountLabel")
-
-if amountLabel then
-
-durabilityLabel:SetTitle("Durability: " .. amountLabel.Text)
-
-end
-
-end
-
-end
-
-if bottomStatList then
-
-local rebirthsFrame = bottomStatList:FindFirstChild("rebirthsFrame")
-
-if rebirthsFrame then
-
-local statLabel = rebirthsFrame:FindFirstChild("statLabel")
-
-if statLabel then
-
-rebirthsLabel:SetTitle("Rebirths: " .. statLabel.Text)
-
-end
-
-end
-
-end
-
-end
-
-end
-
-end
-
+        -- Rebirths (จาก Leaderstats)
+        local success, reb = pcall(function()
+            return player.leaderstats.Rebirths.Value
+        end)
+        
+        if success then
+            rebirthsParagraph:SetTitle("🔄 Rebirths: "..formatNumber(reb))
+        else
+            rebirthsParagraph:SetTitle("🔄 Rebirths: N/A")
+        end
+    end
 end
 
 task.spawn(updateStats)
