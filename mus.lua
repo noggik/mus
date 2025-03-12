@@ -259,6 +259,112 @@ end
 
 local stopFunction = nil
 
+local statsSection = MainTab:AddSection("สถิติผู้เล่น")
+
+local strengthLabel = statsSection:AddParagraph({
+
+Title = "Strength",
+
+Content = "กำลังโหลด..."
+
+})
+
+local durabilityLabel = statsSection:AddParagraph({
+
+Title = "Durability",
+
+Content = "กำลังโหลด..."
+
+})
+
+local rebirthsLabel = statsSection:AddParagraph({
+
+Title = "Rebirths",
+
+Content = "กำลังโหลด..."
+
+})
+
+local function updateStats()
+
+while true do
+
+task.wait(1) -- อัพเดททุก 1 วินาที
+
+local playerGui = game:GetService("Players").LocalPlayer.PlayerGui
+
+if playerGui:FindFirstChild("gameGui") then
+
+local gameGui = playerGui.gameGui
+
+local statsMenu = gameGui:FindFirstChild("statsMenu")
+
+if statsMenu then
+
+local statsList = statsMenu:FindFirstChild("statsList")
+
+local bottomStatList = statsMenu:FindFirstChild("bottomStatList")
+
+if statsList then
+
+local strengthFrame = statsList:FindFirstChild("strengthFrame")
+
+local durabilityFrame = statsList:FindFirstChild("durabilityFrame")
+
+if strengthFrame then
+
+local amountLabel = strengthFrame:FindFirstChild("amountLabel")
+
+if amountLabel then
+
+strengthLabel:SetTitle("Strength: " .. amountLabel.Text)
+
+end
+
+end
+
+if durabilityFrame then
+
+local amountLabel = durabilityFrame:FindFirstChild("amountLabel")
+
+if amountLabel then
+
+durabilityLabel:SetTitle("Durability: " .. amountLabel.Text)
+
+end
+
+end
+
+end
+
+if bottomStatList then
+
+local rebirthsFrame = bottomStatList:FindFirstChild("rebirthsFrame")
+
+if rebirthsFrame then
+
+local statLabel = rebirthsFrame:FindFirstChild("statLabel")
+
+if statLabel then
+
+rebirthsLabel:SetTitle("Rebirths: " .. statLabel.Text)
+
+end
+
+end
+
+end
+
+end
+
+end
+
+end
+
+end
+
+task.spawn(updateStats)
+
 local AutoFarmToggle = MainTab:AddToggle("AutoFarmToggle", {
     Title = "Auto Farm",
     Description = "เปิดระบบฟาร์มอัตโนมัติสำหรับ Muscle Legends",
